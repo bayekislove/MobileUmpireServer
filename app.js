@@ -12,7 +12,7 @@ const MAX_SALT_ROUNDS = 13;
 
 var pg = require('pg');
 
-var client = new pg.Client(connectionString);
+var client = new pg.Client(process.env.connectionString);
 
 const getRandomIntInclusive = (min, max) => {
   //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
