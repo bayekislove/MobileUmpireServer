@@ -161,26 +161,28 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   const correctCredentials = await ifCredentialsCorrect(username, password);
   if(correctCredentials) {
-    res.status(200).json("git");
+    res.status(200).json("User logged correctly");
   } else {
-    res.status(401).json("nie git");
+    res.status(401).json("Wrong credentials");
   }
 });
 
 app.post('/register', async (req, res) => {
+  console.log(req.body);
   const { username, password } = req.body;
   console.log(username, password);
   const ifUserIsRegistered = await uniqueLoginNotExists(username);
   console.log(ifUserIsRegistered);
   if(ifUserIsRegistered) {
-    res.status(401).json("nie git");
+    res.status(401).json("User is already logged!");
   }
 
   const ifUserAdded = await addUser(username, password);
   if(ifUserAdded) {
-    res.status(200).json("git");
+    console.log("user added");
+    res.status(200).json("User registered correctly");
   } else {
-    res.status(401).json("nie git");
+    res.status(401).json("Failed while adding user to database");
   };
 });
 
