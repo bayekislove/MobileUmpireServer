@@ -32,7 +32,7 @@ const setupDB = async () => {
 const uniqueLoginNotExists = async (username) => {
   try {
     const res = await client.query(`SELECT * FROM "Users" WHERE "login"='${username}'`);
-    return res.rowCount = 0;
+    return res.rowCount == 0;
   } catch (err) {
     console.log(err);
   }
@@ -154,6 +154,7 @@ const deleteMatchById = async (matchId) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
   setupDB();
+  console.log('Db connection succeeded');
 });
 
 app.post('/login', async (req, res) => {
@@ -168,7 +169,9 @@ app.post('/login', async (req, res) => {
 
 app.post('/register', async (req, res) => {
   const { username, password } = req.body;
+  console.log(username, password);
   const ifUserIsRegistered = await uniqueLoginNotExists(username);
+  console.log(ifUserIsRegistered);
   if(ifUserIsRegistered) {
     res.status(401).json("nie git");
   }
