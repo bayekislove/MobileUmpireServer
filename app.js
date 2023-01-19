@@ -171,10 +171,10 @@ app.post('/register', async (req, res) => {
   console.log(req.body);
   const { username, password } = req.body;
   console.log(username, password);
-  const ifUserIsRegistered = await uniqueLoginNotExists(username);
-  console.log(ifUserIsRegistered);
-  if(ifUserIsRegistered) {
-    res.status(401).json("User is already logged!");
+  const ifUserIsNotRegistered = await uniqueLoginNotExists(username);
+  console.log(ifUserIsNotRegistered);
+  if(ifUserIsNotRegistered) {
+    res.status(401).json("User is already registered!");
   }
 
   const ifUserAdded = await addUser(username, password);
