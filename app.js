@@ -29,10 +29,10 @@ const setupDB = async () => {
   }
 };
 
-const uniqueLoginNotExists = async (username) => {
+const isUserAlreadyRegistered = async (username) => {
   try {
     const res = await client.query(`SELECT * FROM "Users" WHERE "login"='${username}'`);
-    return res.rowCount == 0;
+    return res.rowCount > 0;
   } catch (err) {
     console.log(err);
   }
@@ -171,9 +171,9 @@ app.post('/register', async (req, res) => {
   console.log(req.body);
   const { username, password } = req.body;
   console.log(username, password);
-  const ifUserIsNotRegistered = await uniqueLoginNotExists(username);
-  console.log(ifUserIsNotRegistered);
-  if(ifUserIsNotRegistered) {
+  const ifUserIsRegistered = await isUserAlreadyRegistered(username);
+  console.log(ifUserIsRegistered);
+  if(ifUserIsRegistered) {
     res.status(401).json("User is already registered!");
   }
 
