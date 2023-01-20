@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const MIN_SALT_ROUNDS = 5;
 const MAX_SALT_ROUNDS = 13;
@@ -32,11 +33,28 @@ const comparePasswords = async (password, hashedPassword) => {
     return await bcrypt
         .compare(password, hashedPassword)
         .catch(err => console.error(err.message));
-}
+};
+
+const getJWT = (login) => {
+    return jwt.sign(
+        { user: login },
+        process.env.jwtSecret,
+        {
+          expiresIn: "24h",
+        }
+    );
+};
+
+const getUserFromJWT = (token) => {
+    console.log(jwt.verify(token, process.env.jwtSecret).user);
+    return jwt.verify(token, process.env.jwtSecret).user;
+};
 
 module.exports = {
     getRandomIntInclusive,
     serializeStatsForPlayer,
     getHashedPassword,
-    comparePasswords
+    comparePasswords,
+    getJWT,
+    getUserFromJWT
 }

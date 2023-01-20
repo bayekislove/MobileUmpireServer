@@ -106,14 +106,31 @@ const getStatsByMatchId = async (matchid) => {
     }
 };
 
-const deleteMatchById = async (matchid) => {
+const ifMatchExistByIdAndUmpire = async (matchid, umpire) => {
     try {
-        await client.query(`DELETE FROM "Matches" WHERE id = $1`, [matchid]);
-        await client.query(`DELETE FROM "Stats" WHERE matchid = $1`, [matchid]);
+        const res = await client.query(`SELECT * from "Matches" WHERE id = $1 AND umpire = $2`,
+            [matchid, umpire]);
+        return res.rowCount > 0;
+    } catch (err) {
+        console.log(err);
+    }
+}
+
+const deleteMatchById = async (id) => {
+    try {
+        await client.query(`DELETE FROM "Matches" WHERE id = $1`, [id]);
     } catch (err) {
         console.log(err);
     }
 };
+
+const deleteStatsByMatchId = async (matchid) => {
+    try {
+        await client.query(`DELETE FROM "Stats" WHERE matchid = $1`, [matchid]);
+    } catch (err) {
+        console.log(err);
+    }
+}
 
 module.exports = {
     connect,
@@ -124,5 +141,7 @@ module.exports = {
     addStats,
     getMatchesByUmpire,
     getStatsByMatchId,
-    deleteMatchById
+    deleteMatchById,
+    deleteStatsByMatchId,
+    ifMatchExistByIdAndUmpire
 }

@@ -2,13 +2,14 @@ const express = require("express");
 
 const helpers = require('./helpers');
 const db = require('./database');
+const auth = require('./auth');
 
 const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = 8080;
+const PORT = 443;
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
@@ -31,7 +32,8 @@ app.post('/login', async (req, res) => {
 
   const hashedPassword = await db.getPasswordByLogin(username);
   if(await helpers.comparePasswords(password, hashedPassword)) {
-    res.status(200).json({'message': "User logged correctly"});
+    const token = helpers.getJWT(username);
+    res.status(200).json({'token': token});
   } else {
     res.status(401).json({'message': 'Wrong credentials'});
   }
@@ -56,23 +58,30 @@ app.post('/register', async (req, res) => {
   };
 });
 
-app.post('/matches', async (req, res) => {
+app.post('/matches', auth.auth, async (req, res) => {
+  req.body.info.umpire = req.login;
   const id = await db.addMatch(req.body.info);
 
   await db.addStats(req.body.statsPlayerA, req.body.statsPlayerB, id);
   res.status(200).json({'message': "Match added correctly"});
 });
 
-app.get('/matches/:umpire', async (req, res) => {
-  const reqUmpire = req.params.umpire;
+app.get('/matches', auth.auth, async (req, res) => {
+  const reqUmpire = req.login;
 
   const matches = await db.getMatchesByUmpire(reqUmpire);
-  console.log(matches);
   res.status(200).json(matches);
 });
 
-app.get('/stats/:id/', async (req, res) => {
+app.get('/stats/:id/', auth.auth, async (req, res) => {
   const reqMatchId = req.params.id;
+  const reqUmpire = req.login;
+  console.log(reqMatchId, reqUmpire);
+  console.log(await db.ifMatchExistByIdAndUmpire(reqMatchId, reqUmpire));
+
+  if (!await db.ifMatchExistByIdAndUmpire(reqMatchId, reqUmpire)) {
+    res.status(401).json("User not authorized to get stats!");
+  };
 
   const stats = await db.getStatsByMatchId(reqMatchId);
 
@@ -91,9 +100,16 @@ app.get('/stats/:id/', async (req, res) => {
   res.status(200).json([playerAStats, playerBStats]);
 });
 
-app.delete('/matches/:id', async (req, res) => {
+app.delete('/matches/:id', auth.auth, async (req, res) => {
   const reqMatchId = req.params.id;
+  const reqUmpire = req.login;
+
+  if (!await db.ifMatchExistByIdAndUmpire(reqMatchId, reqUmpire)) {
+    res.status(401).json("User not authorized to delete match!");
+  };
 
   await db.deleteMatchById(reqMatchId);
+  await db.deleteStatsByMatchId(reqMatchId);
+
   res.status(200).json({'message': "Match deleted correctly"});
 });
