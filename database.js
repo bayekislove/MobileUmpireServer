@@ -1,7 +1,6 @@
 var pg = require('pg');
 
-var connectionString = 'postgres://postgres:skinsept27@localhost:5432/MobileUmpire';
-var client = new pg.Client(connectionString);
+var client = new pg.Client(process.env.connectionString);
 
 const connect = async () => {
     try {
@@ -15,7 +14,7 @@ const connect = async () => {
 
 const ifUserExistsByLogin = async (login) => {
     try {
-        const res = await client.query(`SELECT * FROM "Users" WHERE "login"='${login}'`);
+        const res = await client.query(`SELECT * FROM "Users" WHERE login = $1`, [login]);
         return res.rowCount > 0;
     } catch (err) {
         console.log(err);
@@ -23,9 +22,10 @@ const ifUserExistsByLogin = async (login) => {
     }
 };
 
-const addUser = async (username, password) => {
+const addUser = async (login, password) => {
     try {
-        await client.query(`INSERT INTO "Users" (login, password) VALUES ('${username}', '${password}')`);
+        await client.query(`INSERT INTO "Users" (login, password) VALUES ($1, $2)`,
+            [login, password]);
         return true;
     } catch (err) {
         console.log(err);
@@ -33,9 +33,9 @@ const addUser = async (username, password) => {
     }
 };
 
-const getPasswordByLogin = async (username) => {
+const getPasswordByLogin = async (login) => {
     try {
-        const user = await client.query(`SELECT * FROM "Users" WHERE ("login"='${username}')`);
+        const user = await client.query(`SELECT * FROM "Users" WHERE login = $1`, [login]);
         return user.rows[0].password;
     } catch (err) {
         console.log(err);
@@ -44,11 +44,12 @@ const getPasswordByLogin = async (username) => {
 
 const addMatch = async (info) => {
     try {
+        const valuesFromInfo = [info.playeraname, info.playerbname, info.duration, info.date,
+            info.tournamentname, info.round, info.result, info.umpire];
         let res = await client.query(`INSERT INTO "Matches" (
-            playerAName, playerBName, duration, date, tournamentname, round, result, umpire)
-            VALUES ('${info.playerAName}', '${info.playerBName}', '${info.duration}', '${info.date}', 
-            '${info.tournamentName}', '${info.round}', '${info.result}', '${info.umpire}')
-            RETURNING id`);
+            playeraname, playerbname, duration, date, tournamentname, round, result, umpire)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            RETURNING id`, valuesFromInfo);
         console.log("New match id: " + `${res.rows[0].id}`);
         return res.rows[0].id;
   
@@ -61,20 +62,26 @@ const addStats = async (playerAStats, playerBStats, id) => {
     try {
         for(let i = 0; i < 4; i++) {
             let stats = playerAStats[i];
-            console.log(stats);
-            let statsStringPlayerA = `${id}, ${i}, ${stats[0]}, ${stats[1]}, ${stats[2]}, ${stats[3]}, ${stats[4]}, ${stats[5]}, ${stats[6]}, true`;
+
+            let valuesForPlayerA = [id, i, stats[0], stats[1], stats[2], stats[3],
+                stats[4], stats[5], stats[6], true];
+
             let queryStringPlayerA = `INSERT INTO "Stats"(
-              matchid, set, aces, firstservesin, totalserves, doublefaults, unforcederrors, winners, pointswon, isplayerA)
-              VALUES (${statsStringPlayerA})`;
-            await client.query(queryStringPlayerA);
+              matchid, set, aces, firstservesin, totalserves, doublefaults, unforcederrors, winners, pointswon, isplayera)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`;
+
+            await client.query(queryStringPlayerA, valuesForPlayerA);
   
             stats = playerBStats[i];
-            console.log(stats);
-            let statsStringPlayerB = `${id}, ${i}, ${stats[0]}, ${stats[1]}, ${stats[2]}, ${stats[3]}, ${stats[4]}, ${stats[5]}, ${stats[6]}, false`;
+
+            let valuesForPlayerB = [id, i, stats[0], stats[1], stats[2], stats[3],
+                stats[4], stats[5], stats[6], false];
+
             let queryStringPlayerB = `INSERT INTO "Stats"(
-              matchid, set, aces, firstservesin, totalserves, doublefaults, unforcederrors, winners, pointswon, isplayerA)
-              VALUES (${statsStringPlayerB})`;
-            await client.query(queryStringPlayerB);
+              matchid, set, aces, firstservesin, totalserves, doublefaults, unforcederrors, winners, pointswon, isplayera)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`;
+
+            await client.query(queryStringPlayerB, valuesForPlayerB);
         }
     } catch (err) {
         console.log(err);
@@ -83,35 +90,26 @@ const addStats = async (playerAStats, playerBStats, id) => {
 
 const getMatchesByUmpire = async (umpire) => {
     try {
-        const res = await client.query(`SELECT * FROM "Matches" WHERE ("umpire"='${umpire}')`);
+        const res = await client.query(`SELECT * FROM "Matches" WHERE umpire = $1`, [umpire]);
         return res.rows;
     } catch (err) {
         console.log(err);
     }
 };
 
-const getStatsByMatchId = async (matchId) => {
+const getStatsByMatchId = async (matchid) => {
     try {
-        const res = await client.query(`SELECT * from "Stats" WHERE ("matchid"=${matchId})`);
-        let playerAStats = [];
-        let playerBStats = [];
-        res.rows.forEach(set => {
-          if(set.isPlayerA) {
-            playerAStats[set.set] = helpers.serializeStatsForPlayer(set);
-          } else {
-            playerBStats[set.set] = helpers.serializeStatsForPlayer(set);
-          }
-        });
-        return [playerAStats, playerBStats];
+        const res = await client.query(`SELECT * from "Stats" WHERE matchid = $1`, [matchid]);
+        return res.rows;
     } catch (err) {
         console.log(err);
     }
 };
 
-const deleteMatchById = async (matchId) => {
+const deleteMatchById = async (matchid) => {
     try {
-        await client.query(`DELETE FROM "Matches" WHERE ("id"=${matchId})`);
-        await client.query(`DELETE FROM "Stats" WHERE ("matchid"=${matchId})`);
+        await client.query(`DELETE FROM "Matches" WHERE id = $1`, [matchid]);
+        await client.query(`DELETE FROM "Stats" WHERE matchid = $1`, [matchid]);
     } catch (err) {
         console.log(err);
     }

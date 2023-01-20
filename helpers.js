@@ -1,5 +1,8 @@
 const bcrypt = require("bcrypt");
 
+const MIN_SALT_ROUNDS = 5;
+const MAX_SALT_ROUNDS = 13;
+
 const getRandomIntInclusive = (min, max) => {
     //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random
     min = Math.ceil(min);
