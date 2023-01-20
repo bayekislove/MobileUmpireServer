@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const PORT = 8054;
+const PORT = process.env.PORT;
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
