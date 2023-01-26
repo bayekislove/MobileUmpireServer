@@ -10,7 +10,6 @@ const auth = (req, res, next) => {
 
     try {
         const login = helpers.getUserFromJWT(token);
-        console.log("LOGIN: " + login);
         req.login = login;
     } catch (err) {
         console.log(err);
