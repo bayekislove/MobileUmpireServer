@@ -27,7 +27,7 @@ const serializeStatsForPlayer = (stats) => {
 
 const getHashedPassword = async (password) => {
     const saltRounds = getRandomIntInclusive(MIN_SALT_ROUNDS, MAX_SALT_ROUNDS);
-    const hashedPassword = "";
+    let hashedPassword = "";
 
     await bcrypt.hash(password, saltRounds)
     .then(hash => {
