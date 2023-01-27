@@ -53,6 +53,11 @@ app.post('/register', async (req, res) => {
     return;
   }
 
+  if(!helpers.validateLogin(username)) {
+    res.status(401).json({'message': 'Login is too short!'});
+    return;
+  }
+
   const hashedPassword = await helpers.getHashedPassword(password);
   const ifUserAdded = await db.addUser(username, hashedPassword);
   if(ifUserAdded) {

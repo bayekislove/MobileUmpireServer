@@ -8,6 +8,10 @@ const ifPasswordHasNumber = (password) => {
     return /[0-9]/.test(password);
 };
 
+const validateLogin = (login) => {
+    return login.length > 5;
+};
+
 const validatePassword = (password) => {
     return password.length > 8 &&
         password.toLowerCase() != password &&
@@ -61,6 +65,7 @@ const getUserFromJWT = (token) => {
 module.exports = {
     ifPasswordHasNumber,
     validatePassword,
+    validateLogin,
     getRandomIntInclusive,
     serializeStatsForPlayer,
     getHashedPassword,
