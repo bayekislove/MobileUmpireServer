@@ -50,7 +50,6 @@ const addMatch = async (info) => {
             playeraname, playerbname, duration, date, tournamentname, round, result, umpire)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING id`, valuesFromInfo);
-        console.log("New match id: " + `${res.rows[0].id}`);
         return res.rows[0].id;
   
     } catch (err) {
@@ -60,7 +59,7 @@ const addMatch = async (info) => {
 
 const addStats = async (playerAStats, playerBStats, id) => {
     try {
-        for(let i = 0; i < 4; i++) {
+        for(let i = 0; i < playerAStats.length; i++) {
             let stats = playerAStats[i];
 
             let valuesForPlayerA = [id, i, stats[0], stats[1], stats[2], stats[3],

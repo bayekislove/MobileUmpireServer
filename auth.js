@@ -2,7 +2,6 @@ const helpers = require('./helpers');
 
 const auth = (req, res, next) => {
     const token = req.headers["authorization"].split(" ")[1];;
-    console.log("TOKEN: " + token);
 
     if(!token) {
         return res.status(403).send("No valid token");

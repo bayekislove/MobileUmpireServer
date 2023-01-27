@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
+  console.log(`MobileUmpireServer app listening on port ${PORT}`);
 
   if(db.connect()) {
     console.log('Db connection set up correctly');
@@ -23,7 +23,6 @@ app.listen(PORT, () => {
 
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  console.log(username, password);
 
   const ifUserRegistered = await db.ifUserExistsByLogin(username);
   if(!ifUserRegistered) {
@@ -57,7 +56,6 @@ app.post('/register', async (req, res) => {
   const hashedPassword = await helpers.getHashedPassword(password);
   const ifUserAdded = await db.addUser(username, hashedPassword);
   if(ifUserAdded) {
-    console.log("user added");
     res.status(200).json({'message': "User registered correctly"});
   } else {
     res.status(500).json({'message': "Failed while adding user to database"});
@@ -65,11 +63,9 @@ app.post('/register', async (req, res) => {
 });
 
 app.post('/matches', auth.auth, async (req, res) => {
-  console.log(req.login);
   req.body.info.umpire = req.login;
-  console.log(req.body.info);
-  const id = await db.addMatch(req.body.info);
 
+  const id = await db.addMatch(req.body.info);
   await db.addStats(req.body.statsPlayerA, req.body.statsPlayerB, id);
   res.status(200).json({'message': "Match added correctly"});
 });
@@ -84,8 +80,6 @@ app.get('/matches', auth.auth, async (req, res) => {
 app.get('/stats/:id/', auth.auth, async (req, res) => {
   const reqMatchId = req.params.id;
   const reqUmpire = req.login;
-  console.log(reqMatchId, reqUmpire);
-  console.log(await db.ifMatchExistByIdAndUmpire(reqMatchId, reqUmpire));
 
   if (!await db.ifMatchExistByIdAndUmpire(reqMatchId, reqUmpire)) {
     res.status(401).json("User not authorized to get stats!");
@@ -105,7 +99,6 @@ app.get('/stats/:id/', auth.auth, async (req, res) => {
     }
   });
 
-  console.log([playerAStats, playerBStats]);
   res.status(200).json([playerAStats, playerBStats]);
 });
 

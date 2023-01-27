@@ -31,7 +31,6 @@ const getHashedPassword = async (password) => {
 
     await bcrypt.hash(password, saltRounds)
     .then(hash => {
-      console.log('Hash: ', hash);
       hashedPassword = hash;
     })
     .catch(err => console.error(err.message));
@@ -56,7 +55,6 @@ const getJWT = (login) => {
 };
 
 const getUserFromJWT = (token) => {
-    console.log(jwt.verify(token, process.env.jwtSecret).user);
     return jwt.verify(token, process.env.jwtSecret).user;
 };
 
